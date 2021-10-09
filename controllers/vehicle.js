@@ -2,22 +2,56 @@ const VehicleM = require("../model/vehicle");
 const { cloudinary } = require("../cloudinary");
 
 module.exports.index = async (req, res) => {
-  const vehicles = await VehicleM.find({});
-  // res.json(vehicles);
+  const {
+    min_price = 0,
+    max_price,
+    type,
+    condition,
+    fuel,
+    transmission,
+    search,
+    sort = "new",
+  } = req.query;
+  
+  let query = {};
+  let orderby = { createdAt: -1 };
+  query.vPrice = { $gte: min_price };
+  if (type) {
+    query.vType = type;
+  }
+  if (condition) {
+    query.vCondition = condition;
+  }
+  if (fuel) {
+    query.vFuelType = fuel;
+  }
+  if (transmission) {
+    query.vTransType = transmission;
+  }
+  if (max_price) {
+    query.vPrice = { $gte: min_price, $lte: max_price };
+  }
+  if (search) {
+    query.vModel = { $regex: new RegExp(search, "i") };
+  }
+  if (sort == "last") {
+    orderby = { createdAt: 1 };
+  }
+  if (sort == "low_price") {
+    orderby = { vPrice: 1 };
+  }
+  if (sort == "high_price") {
+    orderby = { vPrice: -1 };
+  }
+  const vehicles = await VehicleM.find(query).sort(orderby).exec();
   res.status(200).send(vehicles);
-  // res.render('vehicles/index',{vehicles});
 };
 
 module.exports.userVehicles = async (req, res) => {
   const vehicles = await VehicleM.find({
     vSeller: req.params.sellerId,
   });
-  console.log("UserID");
-  console.log(req.params.sellerId);
-  console.log("UserID");
-  console.log(vehicles);
   res.status(200).send(vehicles);
-  // res.render('parts/index',{parts});
 };
 
 module.exports.store = async (req, res) => {
@@ -36,15 +70,6 @@ module.exports.show = async (req, res) => {
   res.status(200).send(vehicle);
 };
 
-// module.exports.edit = async (req,res)=>{
-//     const vehicle = await vehicle.findById(req.params.id);
-//     if(!vehicle){
-//         req.flash('error',"Couldn't find that vehicle!");
-//         return res.redirect(`/vehicles`);
-//     }
-//     res.render('vehicles/edit',{vehicle});
-// }
-
 module.exports.update = async (req, res) => {
   const { id } = req.params;
   const vehicle = await VehicleM.findByIdAndUpdate(id, { ...req.body });
@@ -53,8 +78,6 @@ module.exports.update = async (req, res) => {
   await vehicle.save();
 
   res.status(200).send(vehicle);
-  // req.flash('success','Successfully Updated the vehicle!');
-  // res.redirect(`/vehicles/${vehicle._id}`);
 };
 
 module.exports.delete = async (req, res) => {
@@ -62,6 +85,4 @@ module.exports.delete = async (req, res) => {
   const vehicle = await VehicleM.findByIdAndDelete(id);
 
   res.status(200).send("Success");
-  // req.flash('success','Successfully Deleted a vehicle!');
-  // res.redirect(`/vehicles`);
 };

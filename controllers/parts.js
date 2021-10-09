@@ -2,19 +2,51 @@ const PartM = require("../model/parts");
 const { cloudinary } = require("../cloudinary");
 
 module.exports.index = async (req, res) => {
-  const parts = await PartM.find({});
+  const {
+    min_price = 0,
+    max_price,
+    type,
+    category,
+    condition,
+    search,
+    sort = "new",
+  } = req.query;
+  
+  let query = {};
+  let orderby = { createdAt: -1 };
+  query.vPrice = { $gte: min_price };
+  if (type) {
+    query.pType = type;
+  }
+  if (category) {
+    query.pCatagory = category;
+  }
+  if (condition) {
+    query.pCondition = condition;
+  }
+  if (max_price) {
+    query.pPrice = { $gte: min_price, $lte: max_price };
+  }
+  if (search) {
+    query.vModel = { $regex: new RegExp(search, "i") };
+  }
+  if (sort == "last") {
+    orderby = { createdAt: 1 };
+  }
+  if (sort == "low_price") {
+    orderby = { pPrice: 1 };
+  }
+  if (sort == "high_price") {
+    orderby = { pPrice: -1 };
+  }
+  const parts = await PartM.find(query).sort(orderby).exec();
   res.status(200).send(parts);
-  // res.render('parts/index',{parts});
+  
 };
 
 module.exports.userParts = async (req, res) => {
   const parts = await PartM.find({ pSeller: req.params.sellerId });
-  // console.log("UserID");
-  // console.log(req.params.sellerId);
-  // console.log("UserID");
-  // console.log(parts);
   res.status(200).send(parts);
-  // res.render('parts/index',{parts});
 };
 
 module.exports.store = async (req, res) => {
@@ -29,22 +61,8 @@ module.exports.update = async (req, res) => {
   const { id } = req.params;
   const part = await PartM.findByIdAndUpdate(id, { ...req.body });
   part.pImages = req.body.images.split(",");
-  // const img = req.files.map((f) => ({ url: f.path, filename: f.filename }));
-  // part.images.push(...img);
   await part.save();
-  // if (req.body.deleteImages) {
-  // for (let filename of req.body.deleteImages) {
-  //   await cloudinary.uploader.destroy(filename);
-  // }
-  //   const deletedimg = req.body.deleteImages.split(",");
-  //   await part.updateOne({
-  //     $pull: { pImages: { filename: { $in: deletedimg } } },
-  //   });
-  // }
-
   res.status(200).send(part);
-  // req.flash('success','Successfully Updated the part!');
-  // res.redirect(`/parts/${part._id}`);
 };
 module.exports.show = async (req, res) => {
   const parts = await PartM.findById(req.params.id);
@@ -56,8 +74,5 @@ module.exports.show = async (req, res) => {
 module.exports.delete = async (req, res) => {
   const { id } = req.params;
   const part = await PartM.findByIdAndDelete(id);
-
   res.status(200).send("Success");
-  // req.flash('success','Successfully Deleted a part!');
-  // res.redirect(`/parts`);
 };
