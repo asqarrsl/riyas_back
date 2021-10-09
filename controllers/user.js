@@ -1,7 +1,9 @@
 const User = require("../model/user");
-
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 module.exports.register = async (req, res) => {
-  const { first_name, last_name, email, password } = req.body;
+  const { first_name, last_name, email, password, mobile } = req.body;
+  console.log(req.body);
   if (!(email && password && first_name && last_name)) {
     res.status(400).send("All input is required");
   }
@@ -9,17 +11,43 @@ module.exports.register = async (req, res) => {
   if (oldUser) {
     return res.status(409).send("User Already Exist. Please Login");
   }
-  encryptedPassword = await bcrypt.hash(password, 10);
-  const user = await User.create({
+  const encryptedPassword = await bcrypt.hash(password, 10);
+  console.log(encryptedPassword);
+  const mail = email.toLowerCase();
+  const user = new User({
     first_name,
     last_name,
-    email: email.toLowerCase(),
+    email: mail,
     password: encryptedPassword,
+    mobile,
   });
+  await user.save();
   const token = jwt.sign({ user_id: user._id, email }, process.env.TOKEN_KEY, {
     expiresIn: "2h",
   });
+  console.log(4);
   user.token = token;
+  res.status(201).json(user);
+};
+
+module.exports.updateUser = async (req, res) => {
+  const { id } = req.params;
+  const { first_name, last_name, password, mobile } = req.body;
+
+  if (!(password && first_name && last_name)) {
+    res.status(400).send("All input is required");
+  }
+
+  const encryptedPassword = await bcrypt.hash(password, 10);
+
+  const user = await User.findByIdAndUpdate(id, {
+    first_name,
+    last_name,
+    password: encryptedPassword,
+    mobile,
+  });
+  await user.save();
+
   res.status(201).json(user);
 };
 
@@ -43,9 +71,16 @@ module.exports.login = async (req, res) => {
   res.status(400).send("Invalid Credentials");
 };
 
-
 module.exports.logout = (req, res) => {
-//   req.logOut();
-//   req.flash("success", "Logged Out Successfully");
-//   res.redirect("/campgrounds");
+  // req.logOut();
+
+  const authHeader = req.headers["x-access-token"];
+  console.log(authHeader);
+  jwt.sign(authHeader, "", { expiresIn: 1 }, (logout, err) => {
+    if (logout) {
+      res.status(202).send("Logged Out Successfully");
+    } else {
+      res.send({ msg: err });
+    }
+  });
 };
