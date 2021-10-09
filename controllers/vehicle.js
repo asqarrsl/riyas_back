@@ -12,7 +12,7 @@ module.exports.index = async (req, res) => {
     search,
     sort = "new",
   } = req.query;
-  
+
   let query = {};
   let orderby = { createdAt: -1 };
   query.vPrice = { $gte: min_price };
@@ -45,6 +45,7 @@ module.exports.index = async (req, res) => {
   }
   const vehicles = await VehicleM.find(query).sort(orderby).exec();
   res.status(200).send(vehicles);
+  return
 };
 
 module.exports.userVehicles = async (req, res) => {
@@ -52,6 +53,7 @@ module.exports.userVehicles = async (req, res) => {
     vSeller: req.params.sellerId,
   });
   res.status(200).send(vehicles);
+  return
 };
 
 module.exports.store = async (req, res) => {
@@ -61,13 +63,16 @@ module.exports.store = async (req, res) => {
   await vehicle.save();
 
   res.status(201).send(vehicle);
+  return
 };
 module.exports.show = async (req, res) => {
   const vehicle = await VehicleM.findById(req.params.id);
   if (!vehicle) {
     res.status(400).send({ error: "Couldn't find that vehicle!" });
+    return
   }
   res.status(200).send(vehicle);
+  return
 };
 
 module.exports.update = async (req, res) => {
@@ -78,6 +83,7 @@ module.exports.update = async (req, res) => {
   await vehicle.save();
 
   res.status(200).send(vehicle);
+  return
 };
 
 module.exports.delete = async (req, res) => {
@@ -85,4 +91,5 @@ module.exports.delete = async (req, res) => {
   const vehicle = await VehicleM.findByIdAndDelete(id);
 
   res.status(200).send("Success");
+  return
 };

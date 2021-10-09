@@ -5,7 +5,7 @@ module.exports.register = async (req, res) => {
   const { first_name, last_name, email, password, mobile } = req.body;
   console.log(req.body);
   if (!(email && password && first_name && last_name)) {
-    res.status(400).send("All input is required");
+    return res.status(400).send("All input is required");
   }
   const oldUser = await User.findOne({ email });
   if (oldUser) {
@@ -28,6 +28,7 @@ module.exports.register = async (req, res) => {
   console.log(4);
   user.token = token;
   res.status(201).json(user);
+  return
 };
 
 module.exports.updateUser = async (req, res) => {
@@ -36,6 +37,7 @@ module.exports.updateUser = async (req, res) => {
 
   if (!(password && first_name && last_name)) {
     res.status(400).send("All input is required");
+    return
   }
 
   const encryptedPassword = await bcrypt.hash(password, 10);
@@ -48,13 +50,13 @@ module.exports.updateUser = async (req, res) => {
   });
   await user.save();
 
-  res.status(201).json(user);
+  return res.status(201).json(user);
 };
 
 module.exports.login = async (req, res) => {
   const { email, password } = req.body;
   if (!(email && password)) {
-    res.status(400).send("All input is required");
+    return res.status(400).send("All input is required");
   }
   const user = await User.findOne({ email });
   if (user && (await bcrypt.compare(password, user.password))) {
@@ -66,9 +68,9 @@ module.exports.login = async (req, res) => {
       }
     );
     user.token = token;
-    res.status(200).json(user);
+    return res.status(200).json(user);
   }
-  res.status(400).send("Invalid Credentials");
+  return res.status(400).send("Invalid Credentials");
 };
 
 module.exports.logout = (req, res) => {
@@ -78,9 +80,9 @@ module.exports.logout = (req, res) => {
   console.log(authHeader);
   jwt.sign(authHeader, "", { expiresIn: 1 }, (logout, err) => {
     if (logout) {
-      res.status(202).send("Logged Out Successfully");
+      return res.status(202).send("Logged Out Successfully");
     } else {
-      res.send({ msg: err });
+      return res.send({ msg: err });
     }
   });
 };

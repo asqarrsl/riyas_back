@@ -11,7 +11,7 @@ app.post("/register",auth, async (req, res) => {
   
       // Validate user input
       if (!(email && password && first_name && last_name)) {
-        res.status(400).send("All input is required");
+        return res.status(400).send("All input is required");
       }
       
       const oldUser = await User.findOne({ email });
@@ -41,6 +41,7 @@ app.post("/register",auth, async (req, res) => {
       user.token = token;
   
       res.status(201).json(user);
+      return
     } catch (err) {
       console.log(err);
     }
@@ -56,6 +57,7 @@ app.post("/login", async (req, res) => {
       // Validate user input
       if (!(email && password)) {
         res.status(400).send("All input is required");
+        return
       }
       // Validate if user exist in our database
       const user = await User.findOne({ email });
@@ -75,8 +77,10 @@ app.post("/login", async (req, res) => {
   
         // user
         res.status(200).json(user);
+        return
       }
       res.status(400).send("Invalid Credentials");
+      return
     } catch (err) {
       console.log(err);
     }

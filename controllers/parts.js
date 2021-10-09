@@ -41,12 +41,14 @@ module.exports.index = async (req, res) => {
   }
   const parts = await PartM.find(query).sort(orderby).exec();
   res.status(200).send(parts);
-  
+  return;
+
 };
 
 module.exports.userParts = async (req, res) => {
   const parts = await PartM.find({ pSeller: req.params.sellerId });
   res.status(200).send(parts);
+  return;
 };
 
 module.exports.store = async (req, res) => {
@@ -55,6 +57,7 @@ module.exports.store = async (req, res) => {
   part.pSeller = req.user.user_id;
   await part.save();
   res.status(201).send(part);
+  return;
 };
 
 module.exports.update = async (req, res) => {
@@ -63,16 +66,19 @@ module.exports.update = async (req, res) => {
   part.pImages = req.body.images.split(",");
   await part.save();
   res.status(200).send(part);
+  return;
 };
 module.exports.show = async (req, res) => {
   const parts = await PartM.findById(req.params.id);
   if (!parts) {
-    res.status(400).send({ error: "Couldn't find that parts!" });
+    return res.status(400).send({ error: "Couldn't find that parts!" });
   }
   res.status(200).send(parts);
+  return;
 };
 module.exports.delete = async (req, res) => {
   const { id } = req.params;
   const part = await PartM.findByIdAndDelete(id);
   res.status(200).send("Success");
+  return;
 };

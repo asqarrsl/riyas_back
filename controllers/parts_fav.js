@@ -8,6 +8,7 @@ module.exports.store = async (req, res) => {
   await part_fav.save();
 
   res.status(200).send(part_fav);
+  return;
 };
 
 module.exports.delete = async (req, res) => {
@@ -15,4 +16,6 @@ module.exports.delete = async (req, res) => {
   const vehicle = await VehicleM.findByIdAndDelete(id);
 
   res.status(200).send("Success");
+  return;
+
 };
